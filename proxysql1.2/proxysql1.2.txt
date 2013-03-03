@@ -1,0 +1,81 @@
+JDBC数据库操作乱码非主流解决方案---JDBC连接驱动代理
+以驱动的方式提供给使用方，在底层实现连接的代理管理功能，向使用者隐藏
+ 实现过程以及无缝的过渡
+ 你需要了解下列参数：
+ proxy.driver= （必须）实际要连接到的数据库驱动程序，当然该驱动程序也必须存在于环境路径中
+ proxy.url= （必须）实际要连接到的数据库的JDBC连接使用的URL
+ proxy.encoding= （可选）实际连接到的数据库所使用的编码，指定该参数后，所有的对于该数
+ 据库的访问操作所产生或获得的字符串将被使用该编码进行转码，该动作是被多个代理程序包装，
+ 并很好的隐藏的，你不必关心，你只需要确定你所需要连接到的数据库的编码
+ user=username
+ password=password
+ ...
+ （可选）你可以追加任意多个属性，这些属性将被直接送到实际连接的数据库驱动代理程序不会使用这些参数
+     你有三个途径设置这些参数，你可以选用其中的部分或全部来设置这些参数.
+     首先，你可以创建一个"xxx.properties"属性文件，并存在与环境路径中（xxx代表你的属性文件名）然后
+ 在URL中直接指定这个属性文件名："jdbc:proxy:xxx"
+     其次，你可以在URL最后跟上类似"?key=value&key=value…………"的字符串，代理程序将把其中的每个
+ "key=value"当做一个属性名/值对，添加到配置信息中。
+     再者，你可以使用DriverManger.getConnection(String url,Properties propertis);方法为这个连接附
+ 加一个属性集
+     所有这三个途径载入顺序为：属性文件、URL附加参数、连接时的属性集，后载入的属性如果与之前的重复，那
+ 么将覆盖之前的匹配；最终这些参数中的三个以"proxy."开头的参数将被特殊处理，其余将全部直接送入数据库
+ JDBC驱动程序。
+     典型的例子：
+ 1)
+ ...
+ Connection conn=null;
+ try{
+   Class.forName("xoj.sql.proxy.ProxyDriver");
+   conn=DriverManager.getConnection("jdbc:proxy:xxx");
+ }catch(ClassNotFoundException e){
+   e.printStackTrace();
+ }catch(SQLException e){
+   e.printStackTrace();
+ }
+ ...
+ 
+ 2)
+ ...
+ Connection conn=null;
+ try{
+   Class.forName("xoj.sql.proxy.ProxyDriver");
+   conn=DriverManager.getConnection("jdbc:proxy:?user=username&password=password");
+ }catch(ClassNotFoundException e){
+   e.printStackTrace();
+ }catch(SQLException e){
+   e.printStackTrace();
+ }
+ ...
+  
+ 3)
+ ...
+ Connection conn=null;
+ Properties properties=……
+ ...
+ try{
+   Class.forName("xoj.sql.proxy.ProxyDriver");
+   conn=DriverManager.getConnection("jdbc:proxy:",properties);
+ }catch(ClassNotFoundException e){
+   e.printStackTrace();
+ }catch(SQLException e){
+   e.printStackTrace();
+ }
+ ...
+ 
+ 4)
+ ...
+ Connection conn=null;
+ Properties properties=……
+ ...
+ try{
+   Class.forName("xoj.sql.proxy.ProxyDriver");
+   conn=DriverManager.getConnection("jdbc:proxy:xxx?user=username&password=password",properties);
+ }catch(ClassNotFoundException e){
+   e.printStackTrace();
+ }catch(SQLException e){
+   e.printStackTrace();
+ }
+ ...
+  
+     总之，你应该把它当作一个数据库驱动程序来使用
